@@ -26,13 +26,18 @@ read_abundance <- function(df, key = NULL) {
 }
 
 
-relative_abundance <- function(df, key = NULL) {
-    abundance <- read_abundance(df, key)
-    total_abundance <- read_abundance(df, "*")
+relative_abundance <- function(a, b) {
+    a %>%
+        left_join(b, by = "SampleID", suffix = c("_a", "_b")) %>%
+        mutate(Ratio = Abundance_a / Abundance_b) %>%
+        select(SampleID, Ratio)
+}
 
-    bind_cols(abundance, total_abundance) %>%
-        mutate(Ratio = Abundance...2 / Abundance...4) %>%
-        select(SampleID = SampleID...1, Ratio)
+get_ratio <- function(df, key = NULL) {
+    relative_abundance(
+        read_abundance(df, key),
+        read_abundance(df, "*")
+    )
 }
 
 
@@ -56,6 +61,5 @@ tax <- ps %>%
 df <- otu %>%
     left_join(tax, by = "FeatureID")
 
-relative_abundance(df, "Bartonella") %>%
-    arrange(desc(Ratio)) %>%
-    print()
+ratio_df <- get_ratio(df, key = "Bartonella")
+print(ratio_df)
