@@ -37,7 +37,7 @@ composition_barplot <- phyloseq_object %>%
         tax_level = "Genus",
         sample_order = natural_sorted,
         label = "RawID",
-        n_taxa = 41,
+        n_taxa = 41, # brewerPlusは最大個まで色分けできる
         palette = distinct_palette(n = 41, pal = "brewerPlus", add = "gray"),
         bar_outline_colour = NA,
         bar_width = 0.9,
