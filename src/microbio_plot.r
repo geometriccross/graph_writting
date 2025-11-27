@@ -12,7 +12,7 @@ conflict_prefer("filter", "dplyr")
 conflict_prefer("lag", "dplyr")
 
 
-genus_abundance <- function(df, genus_name) {
+read_abundance <- function(df, genus_name) {
     df %>%
         filter(Genus == genus_name) %>%
         select(-FeatureID, -Genus) %>%
