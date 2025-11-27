@@ -37,6 +37,10 @@ get_ratio <- function(df, key = NULL) {
     relative_abundance(
         read_abundance(df, key),
         read_abundance(df, "*")
+    ) %>%
+        mutate(Genus = key)
+}
+
     )
 }
 
