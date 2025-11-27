@@ -41,7 +41,15 @@ get_ratio <- function(df, key = NULL) {
         mutate(Genus = key)
 }
 
+
+# 複数の菌属のratio dataframeを統合する関数
+combine_ratio_dfs <- function(ratio_list, genus_names) {
+    combined <- map2_dfr(
+        ratio_list,
+        genus_names,
+        ~ .x %>% mutate(Genus = .y)
     )
+    return(combined)
 }
 
 
