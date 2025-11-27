@@ -67,8 +67,6 @@ calculate_stats <- function(ratio_df) {
 }
 
 
-
-
 # エラーバー付き散布図を作成する関数
 plot_ratio_scatter <- function(ratio_df,
                                title = "Relative Abundance by Genus",
