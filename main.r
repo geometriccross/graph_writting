@@ -35,10 +35,11 @@ natural_sorted <- phyloseq_object %>%
 composition_barplot <- phyloseq_object %>%
     comp_barplot(
         tax_level = "Genus",
-        n_taxa = 32,
-        bar_outline_colour = NA,
         sample_order = natural_sorted,
         label = "RawID",
+        n_taxa = 41,
+        palette = distinct_palette(n = 41, pal = "brewerPlus", add = "gray"),
+        bar_outline_colour = NA,
         bar_width = 0.9,
     ) +
     coord_flip()
