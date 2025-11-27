@@ -151,7 +151,12 @@ df <- otu %>%
 
 
 
-ratio_df <- get_ratio(df, key = "Bartonella")
+bart_df <- get_ratio(df, key = "Bartonella")
+wol_df <- get_ratio(df, key = "Wolbachia")
 
-plot_ratio_scatter(ratio_df, title = "Relative Abundance of Bartonella") %>%
+combine_ratio_dfs(
+    list(bart_df, wol_df),
+    c("Bartonella", "Wolbachia")
+) %>%
+    plot_ratio_scatter(title = "Relative Abundance of Bartonella") %>%
     ggsave("relative_bartonella.svg", plot = .)
