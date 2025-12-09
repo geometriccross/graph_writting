@@ -16,7 +16,18 @@ natural_sorted <- phyloseq_object %>%
     }
 
 
-composition_barplot <- phyloseq_object %>%
+# 除外する正規表現パターンのリスト
+exclude_patterns <- c(
+    "Family", # 属だけで見たいため
+    "[A-Z]{3}-\\d+", # UCG-003のような不明瞭な属
+    "_group$",
+    "1174-901-12"
+) %>% paste(collapse = "|")
+
+phyloseq_filtered <- phyloseq_object %>%
+    subset_taxa(!grepl(exclude_patterns, Genus))
+
+composition_barplot <- phyloseq_filtered %>%
     comp_barplot(
         tax_level = "Genus",
         sample_order = natural_sorted,
