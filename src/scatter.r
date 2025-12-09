@@ -43,16 +43,6 @@ get_ratio <- function(df, key = NULL) {
 }
 
 
-# 複数の菌属のratio dataframeを統合する関数
-combine_ratio_dfs <- function(ratio_list) {
-    combined <- map_dfr(
-        ratio_list,
-        ~.x
-    )
-    return(combined)
-}
-
-
 # 統計情報を計算する関数（平均、標準偏差、標準誤差、サンプル数）
 calculate_stats <- function(ratio_df) {
     ratio_df %>%
@@ -154,7 +144,13 @@ df <- otu %>%
 
 bart_df <- get_ratio(df, key = "Bartonella")
 wol_df <- get_ratio(df, key = "Wolbachia")
+names(target_map) %>%
+    map_dfr(~ get_ratio(df, key = .x)) %>%
+    mutate(Genus = factor(Genus, levels = names(target_map))) %>%
+    plot_ratio_scatter(title = "占有率の比較", color_map = target_map) %>%
+    ggsave("relative_abundance_comparison.svg", plot = .)
 
-combine_ratio_dfs(list(bart_df, wol_df)) %>%
-    plot_ratio_scatter(title = "Relative Abundance of Bartonella") %>%
-    ggsave("relative_bartonella.svg", plot = .)
+names(target_map) %>%
+    map_dfr(~ get_ratio(df, key = .x) %>%
+        calculate_stats()) %>%
+    write_csv("relative_abundance_stats.csv")
