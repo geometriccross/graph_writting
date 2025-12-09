@@ -62,6 +62,7 @@ calculate_stats <- function(ratio_df) {
             mean_ratio = mean(Ratio, na.rm = TRUE),
             sd_ratio = sd(Ratio, na.rm = TRUE),
             se_ratio = sd_ratio / sqrt(n),
+            detection_rate = sum(Ratio > 0, na.rm = TRUE) / n,
             .groups = "drop"
         )
 }
