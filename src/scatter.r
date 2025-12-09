@@ -103,6 +103,7 @@ plot_ratio_scatter <- function(ratio_df,
             x = x_label,
             y = y_label
         ) +
+        scale_color_manual(values = color_map) +
         theme_bw() +
         theme(
             plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
@@ -141,9 +142,61 @@ df <- otu %>%
     left_join(tax, by = "FeatureID")
 
 
+# "Candidatus_Puchtella" = "#A6CEE3",
+# "Bartonella" = "#1F78B4",
+# "Prevotella" = "#B2DF8A",
+# "Lactobacillus" = "#33A02C",
+# "Blautia" = "#FB9A99",
+# "Escherichia-Shigella" = "#E31A1C",
+# "Faecalibacterium" = "#FDBF6F",
+# "Streptococcus" = "#FF7F00",
+# "Neisseriaceae Family" = "#CAB2D6",
+# "Coxiella" = "#6A3D9A",
+# "Butyricicoccaceae Family" = "#FFFF99",
+# "Lachnospiraceae Family" = "#B15928",
+# "Flavobacterium" = "#1ff8ff",
+# "Pseudomonas" = "#1B9E77",
+# "Succinivibrio" = "#D95F02",
+# "Sphingomonas" = "#7570B3",
+# "Ruminococcus" = "#E7298A",
+# "Arsenophonus" = "#66A61E",
+# "Corynebacterium" = "#E6AB02",
+# "Bifidobacterium" = "#A6761D",
+# "UCG-005" = "#666666",
+# "Staphylococcus" = "#4b6a53",
+# "Methylobacterium-Methylorubrum" = "#b249d5",
+# "Alloprevotella" = "#7edc45",
+# "Dorea" = "#5c47b8",
+# "Lachnospiraceae_ND3007_group" = "#cfd251",
+# "1174-901-12" = "#ff69b4",
+# "Clostridia_UCG-014" = "#69c86c",
+# "UCG-002" = "#cd3e50",
+# "[Eubacterium]_coprostanoligenes_group" = "#83d5af",
+# "[Eubacterium]_hallii_group" = "#da6130",
+# "CAG-352" = "#5e79b2",
+# "Anaerococcus" = "#c29545",
+# "Nocardioides" = "#532a5a",
+# "Erysipelotrichaceae_UCG-003" = "#5f7b35",
+# "Subdoligranulum" = "#c497cf",
+# "Peptoniphilus" = "#773a27",
+# "Comamonadaceae Family" = "#7cb9cb",
+# "Agathobacter" = "#594e50",
+# "Anaerovibrio" = "#d3c4a8",
+# "[Eubacterium]_ruminantium_group" = "#c17e7f",
+# "Other" = "#D3D3D3"
 
-bart_df <- get_ratio(df, key = "Bartonella")
-wol_df <- get_ratio(df, key = "Wolbachia")
+
+target_map <- list(
+    "Bartonella" = "#1F78B4",
+    "Escherichia-Shigella" = "#E31A1C",
+    "Pseudomonas" = "#1B9E77",
+    "Streptococcus" = "#FF7F00",
+    "Staphylococcus" = "#4b6a53",
+    "Corynebacterium" = "#E6AB02",
+    "Candidatus_Puchtella" = "#A6CEE3",
+    "Coxiella" = "#6A3D9A"
+)
+
 names(target_map) %>%
     map_dfr(~ get_ratio(df, key = .x)) %>%
     mutate(Genus = factor(Genus, levels = names(target_map))) %>%
