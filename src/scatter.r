@@ -74,7 +74,8 @@ plot_ratio_scatter <- function(ratio_df,
                                y_label = "Relative Abundance (Ratio)",
                                point_size = 3,
                                point_alpha = 0.5,
-                               error_bar_width = 0.2) {
+                               error_bar_width = 0.2,
+                               color_map = NULL) {
     # 統計情報を計算
     stats_df <- calculate_stats(ratio_df)
 
@@ -91,9 +92,9 @@ plot_ratio_scatter <- function(ratio_df,
         # 平均値
         geom_point(
             data = stats_df,
-            aes(x = Genus, y = mean_ratio, color = Genus),
-            size = point_size * 2,
-            shape = 20 # ●
+            aes(x = Genus, y = mean_ratio, color = "black"),
+            size = point_size,
+            shape = 3 # 十
         ) +
         geom_errorbar(
             data = stats_df,
@@ -104,7 +105,7 @@ plot_ratio_scatter <- function(ratio_df,
                 color = Genus
             ),
             width = error_bar_width,
-            linewidth = 1
+            linewidth = 0.5
         ) +
         labs(
             title = title,
