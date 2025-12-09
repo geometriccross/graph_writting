@@ -141,6 +141,7 @@ tax <- ps %>%
 df <- otu %>%
     left_join(tax, by = "FeatureID")
 
+# ------------------------------------------------------------------------------------------------
 
 # "Candidatus_Puchtella" = "#A6CEE3",
 # "Bartonella" = "#1F78B4",
