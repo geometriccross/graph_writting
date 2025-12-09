@@ -93,7 +93,7 @@ plot_ratio_scatter <- function(ratio_df,
                 x = Genus,
                 ymin = mean_ratio - se_ratio,
                 ymax = mean_ratio + se_ratio,
-                color = Genus
+                color = "black"
             ),
             width = error_bar_width,
             linewidth = 0.5
