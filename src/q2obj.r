@@ -20,7 +20,7 @@ get_q2_type <- function(qza_path) {
             yaml_path <- file.path(tmp, uuid_dir, "metadata.yaml")
             unzip(qza_path, files = file.path(uuid_dir, "metadata.yaml"), exdir = tmp)
 
-            type_val <- readLines(yaml_path) %>%
+            type_val <- readLines(yaml_path, warn = FALSE) %>%
                 str_match("^type:\\s*(.+?)\\s*$") %>%
                 .[, 2] %>%
                 .[!is.na(.)]
@@ -69,15 +69,15 @@ find_file <- function(folder, pattern) {
 # メタデータの読み込みとクリーニング
 clean_sample_data <- function(file_or_folder) {
     if (dir.exists(file_or_folder)) {
-        metadata_path <- find_file(file_or_folder, "\\.csv$")
-    } else if (grepl("\\.csv$", file_or_folder, ignore.case = TRUE)) {
+        metadata_path <- find_file(file_or_folder, "\\.(csv|tsv|txt)$")
+    } else if (file.exists(file_or_folder)) {
         metadata_path <- file_or_folder
     } else {
-        stop(sprintf("Unsupported metadata format (expected .csv): %s", file_or_folder))
+        stop(sprintf("Metadata file or folder not found: %s", file_or_folder))
     }
 
     id_col <- "SampleID"
-    read_csv(metadata_path, comment = "") %>%
+    read_tsv(metadata_path, comment = "") %>%
         rename_with(~id_col, .cols = 1) %>%
         filter(!str_detect(.data[[id_col]], "^#q2:types|^categorical|^numeric")) %>%
         column_to_rownames(id_col) %>%
@@ -89,18 +89,18 @@ clean_sample_data <- function(file_or_folder) {
 load_q2obj <- function(folder) {
     features_path <- find_file(folder, "common_biology_free_table\\.qza$")
     taxonomy_path <- find_file(folder, "common_biology_free_classification\\.qza$")
-    tree_path     <- find_file(folder, "biology_free_tree\\.qza$")
+    tree_path     <- find_file(folder, "biology_free_rooted_tree\\.qza$")
 
     # QIIME2 型の検証
     assert_q2_type(features_path, "FeatureTable[Frequency]")
     assert_q2_type(taxonomy_path, "FeatureData[Taxonomy]")
     assert_q2_type(tree_path,     "Phylogeny[Rooted]")
 
-    qza_to_phyloseq(
+    suppressWarnings(qza_to_phyloseq(
         features = features_path,
         taxonomy = taxonomy_path,
         tree     = tree_path
-    )
+    ))
 }
 
 tax_tweak <- function(phyloseq_object, file_or_folder) {
