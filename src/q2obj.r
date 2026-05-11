@@ -20,10 +20,12 @@ get_q2_type <- function(qza_path) {
             yaml_path <- file.path(tmp, uuid_dir, "metadata.yaml")
             unzip(qza_path, files = file.path(uuid_dir, "metadata.yaml"), exdir = tmp)
 
-            lines <- readLines(yaml_path)
-            match <- str_match(paste(lines, collapse = "\n"), "type:\s*(.+?)\s*$")
-            if (is.na(match[1, 2])) stop("type field not found in metadata.yaml")
-            match[1, 2]
+            type_val <- readLines(yaml_path) |>
+                str_match("^type:\\s*(.+?)\\s*$") |>
+                `[`(, 2) |>
+                `[`(!is.na(.))
+            if (length(type_val) == 0) stop("type field not found in " + basename(qza_path))
+            type_val[1]
         },
         error = function(e) stop(sprintf("Failed to read q2 type from %s: %s", qza_path, e$message))
     )
@@ -50,7 +52,11 @@ find_file <- function(folder, pattern) {
         full.names = TRUE
     )
     # max depth でフィルタ（folder 自体を depth 0 とする）
-    files <- files[map_int(files, \(f) length(strsplit(sub(paste0("^", folder, "/?"), "", f), "/")[[1]])) <= MAX_DEPTH]
+    files <- files[map_int(files, \(f) {
+        rel <- substring(f, nchar(folder) + 1)
+        rel <- sub("^/", "", rel)
+        length(strsplit(rel, "/")[[1]])
+    }) <= MAX_DEPTH]
     if (length(files) == 0) {
         stop(sprintf("No file matching '%s' found in %s (max depth %d)", pattern, folder, MAX_DEPTH))
     }
@@ -73,9 +79,9 @@ clean_sample_data <- function(folder) {
 
 # Feature table等の読み込み、分類名の修正、メタデータの結合
 load_q2obj <- function(folder) {
-    features_path <- find_file(folder, "common_biology_free_table.qza$")
-    taxonomy_path <- find_file(folder, "common_biology_free_classification.qza$")
-    tree_path     <- find_file(folder, "biology_free_tree.qza$")
+    features_path <- find_file(folder, "common_biology_free_table\\.qza$")
+    taxonomy_path <- find_file(folder, "common_biology_free_classification\\.qza$")
+    tree_path     <- find_file(folder, "biology_free_tree\\.qza$")
 
     # QIIME2 型の検証
     assert_q2_type(features_path, "FeatureTable[Frequency]")
