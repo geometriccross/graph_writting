@@ -1,5 +1,24 @@
 #!/usr/bin/env Rscript
 
+show_help <- function() {
+    cat("Usage: Rscript scatter.r <qza_folder> <metadata_path_or_folder> [output_dir]\n\n")
+    cat("Arguments:\n")
+    cat("  qza_folder              QIIME2 .qzaファイルが格納されたフォルダのパス\n")
+    cat("  metadata_path_or_folder メタデータファイルまたはフォルダのパス\n")
+    cat("  output_dir              出力先ディレクトリ (デフォルト: カレントディレクトリ)\n\n")
+    cat("Options:\n")
+    cat("  --help, -h              このヘルプメッセージを表示して終了する\n\n")
+    cat("Outputs:\n")
+    cat("  relative_abundance_comparison.svg  箱ひげ図 + エラーバー付き散布図\n")
+    cat("  relative_abundance_stats.csv       各Genusの統計情報 (n, mean, sd, se, detection_rate)\n")
+    quit(status = 0)
+}
+
+args <- commandArgs(trailingOnly = TRUE)
+if (length(args) > 0 && (args[1] == "--help" || args[1] == "-h")) {
+    show_help()
+}
+
 library(conflicted)
 library(tidyverse)
 library(phyloseq)
@@ -123,9 +142,8 @@ plot_ratio_scatter <- function(ratio_df,
 
 
 
-args <- commandArgs(trailingOnly = TRUE)
 if (length(args) < 2) {
-    stop("Usage: Rscript scatter.r <qza_folder> <metadata_path_or_folder> [output_dir]")
+    stop("Usage: Rscript scatter.r <qza_folder> <metadata_path_or_folder> [output_dir]\nUse --help for more information.")
 }
 qza_folder <- args[1]
 metadata_path <- args[2]
