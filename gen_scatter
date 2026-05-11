@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 show_help <- function() {
-    cat("Usage: Rscript scatter.r <qza_folder> <metadata_path_or_folder> [output_dir]\n\n")
+    cat("Usage: Rscript gen_scatter <qza_folder> <metadata_path_or_folder> [output_dir]\n\n")
     cat("Arguments:\n")
     cat("  qza_folder              QIIME2 .qzaファイルが格納されたフォルダのパス\n")
     cat("  metadata_path_or_folder メタデータファイルまたはフォルダのパス\n")
@@ -143,7 +143,7 @@ plot_ratio_scatter <- function(ratio_df,
 
 
 if (length(args) < 2) {
-    stop("Usage: Rscript scatter.r <qza_folder> <metadata_path_or_folder> [output_dir]\nUse --help for more information.")
+    stop("Usage: Rscript gen_scatter <qza_folder> <metadata_path_or_folder> [output_dir]\nUse --help for more information.")
 }
 qza_folder <- args[1]
 metadata_path <- args[2]

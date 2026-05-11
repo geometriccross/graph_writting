@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 show_help <- function() {
-    cat("Usage: Rscript prevalence.r <qza_folder> <metadata_path> [output_dir]\n\n")
+    cat("Usage: Rscript gen_bartonella_prevalence <qza_folder> <metadata_path> [output_dir]\n\n")
     cat("Arguments:\n")
     cat("  qza_folder      QIIME2 .qzaファイルが格納されたフォルダのパス\n")
     cat("  metadata_path   メタデータファイルのパス (TSV, sample_name列とspecies列が必要)\n")
@@ -111,7 +111,7 @@ plot_prevalence <- function(prevalence_df, title = "Bartonella保有率（種別
 # --- Main ---
 
 if (length(args) < 2) {
-    stop("Usage: Rscript prevalence.r <qza_folder> <metadata_path> [output_dir]\nUse --help for more information.")
+    stop("Usage: Rscript gen_bartonella_prevalence <qza_folder> <metadata_path> [output_dir]\nUse --help for more information.")
 }
 qza_folder <- args[1]
 metadata_path <- args[2]

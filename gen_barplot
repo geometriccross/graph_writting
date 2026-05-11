@@ -1,3 +1,24 @@
+#!/usr/bin/env Rscript
+
+show_help <- function() {
+    cat("Usage: Rscript gen_barplot <qza_folder> <metadata_path_or_folder> [output_dir]\n\n")
+    cat("Arguments:\n")
+    cat("  qza_folder              QIIME2 .qzaファイルが格納されたフォルダのパス\n")
+    cat("  metadata_path_or_folder メタデータファイルまたはフォルダのパス\n")
+    cat("  output_dir              出力先ディレクトリ (デフォルト: カレントディレクトリ)\n\n")
+    cat("Options:\n")
+    cat("  --help, -h              このヘルプメッセージを表示して終了する\n\n")
+    cat("Outputs:\n")
+    cat("  barplot_genus_filtered.svg    属レベル構成比 (除外フィルタ適用済)\n")
+    cat("  barplot_intracellular.svg     細胞内共生細菌のみの構成比\n")
+    quit(status = 0)
+}
+
+args <- commandArgs(trailingOnly = TRUE)
+if (length(args) > 0 && (args[1] == "--help" || args[1] == "-h")) {
+    show_help()
+}
+
 library(tidyverse)
 library(phyloseq)
 library(microViz)
@@ -30,13 +51,18 @@ write_plot <- function(ps, filename, tax_order = sum, width = 16, height = 9, dp
 }
 
 
-args <- commandArgs(trailingOnly = TRUE)
-if (length(args) == 0) {
-    stop("Usage: Rscript barplot.r <folder>")
-}
-folder <- args[1]
+# --- Main ---
 
-phyloseq_object <- load_q2obj(folder) %>% tax_tweak(folder)
+if (length(args) < 2) {
+    stop("Usage: Rscript gen_barplot <qza_folder> <metadata_path_or_folder> [output_dir]\nUse --help for more information.")
+}
+qza_folder <- args[1]
+metadata_path <- args[2]
+output_dir <- if (length(args) >= 3) args[3] else "."
+
+if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+
+phyloseq_object <- load_q2obj(qza_folder) %>% tax_tweak(metadata_path)
 
 natural_sorted <- phyloseq_object %>%
     sample_data() %>%
@@ -58,7 +84,7 @@ phyloseq_filtered <- phyloseq_object %>%
     subset_taxa(!grepl(exclude_patterns, Genus))
 
 
-write_plot(phyloseq_filtered, "./barplot_genus_filtered.svg")
+write_plot(phyloseq_filtered, file.path(output_dir, "barplot_genus_filtered.svg"))
 
 # 細胞内共生細菌のみを表示(それ以外はOtherとして集約)
 intracellular_taxa <- c(
@@ -70,7 +96,8 @@ intracellular_taxa <- c(
 )
 
 write_plot(
-    "./barplot_intracellular.svg",
+    phyloseq_filtered,
+    file.path(output_dir, "barplot_intracellular.svg"),
     tax_order = c(intracellular_taxa, "Other")
 )
 
