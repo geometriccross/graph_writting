@@ -25,30 +25,10 @@ library(phyloseq)
 library(dplyr)
 
 source("./src/q2obj.r")
+source("./src/df_modify.r")
 
 conflict_prefer("filter", "dplyr")
 conflict_prefer("lag", "dplyr")
-
-
-# Bartonella相対存在比をサンプルごとに計算
-# scatter.r の get_ratio(df, "Bartonella") と同等
-bartonella_ratio <- function(df) {
-    bartonella_abundance <- df %>%
-        filter(Genus == "Bartonella") %>%
-        select(-FeatureID, -Genus) %>%
-        colSums() %>%
-        enframe(name = "SampleID", value = "Abundance_a")
-
-    total_abundance <- df %>%
-        select(-FeatureID, -Genus) %>%
-        colSums() %>%
-        enframe(name = "SampleID", value = "Abundance_b")
-
-    bartonella_abundance %>%
-        left_join(total_abundance, by = "SampleID") %>%
-        mutate(Ratio = Abundance_a / Abundance_b) %>%
-        select(SampleID, Ratio)
-}
 
 
 # speciesごとの保有率を計算
@@ -132,22 +112,10 @@ sample_info <- read_tsv(metadata_path, comment = "", show_col_types = FALSE) %>%
     filter(SampleID %in% otu_samples) %>%
     select(SampleID, species)
 
-# OTU + Tax 結合
-otu <- ps %>%
-    otu_table() %>%
-    as.data.frame() %>%
-    rownames_to_column("FeatureID")
-
-tax <- ps %>%
-    tax_table() %>%
-    as.data.frame() %>%
-    select("Genus") %>%
-    rownames_to_column("FeatureID")
-
-df <- otu %>% left_join(tax, by = "FeatureID")
+df <- ps_to_df(ps)
 
 # 種ごとのBartonella保有率を計算
-prevalence_result <- bartonella_ratio(df) %>%
+prevalence_result <- get_ratio(df, "Bartonella") %>%
     calculate_prevalence(sample_info)
 
 # CSV出力

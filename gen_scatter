@@ -27,56 +27,11 @@ library(gtools)
 library(dplyr)
 
 source("./src/q2obj.r")
+source("./src/df_modify.r")
 
 
 conflict_prefer("filter", "dplyr")
 conflict_prefer("lag", "dplyr")
-
-
-read_abundance <- function(df, key = NULL) {
-    result <- df
-
-    if (!(is.null(key) || key == "*")) {
-        result <- result %>% filter(Genus == key)
-    }
-
-    result %>%
-        select(-FeatureID, -Genus) %>%
-        colSums() %>%
-        enframe(name = "SampleID", value = "Abundance")
-}
-
-
-relative_abundance <- function(a, b) {
-    a %>%
-        left_join(b, by = "SampleID", suffix = c("_a", "_b")) %>%
-        mutate(Ratio = Abundance_a / Abundance_b) %>%
-        select(SampleID, Ratio)
-}
-
-
-get_ratio <- function(df, key = NULL) {
-    relative_abundance(
-        read_abundance(df, key),
-        read_abundance(df, "*")
-    ) %>%
-        mutate(Genus = key)
-}
-
-
-# 統計情報を計算する関数（平均、標準偏差、標準誤差、サンプル数）
-calculate_stats <- function(ratio_df) {
-    ratio_df %>%
-        group_by(Genus) %>%
-        summarise(
-            n = n(),
-            mean_ratio = mean(Ratio, na.rm = TRUE),
-            sd_ratio = sd(Ratio, na.rm = TRUE),
-            se_ratio = sd_ratio / sqrt(n),
-            detection_rate = sum(Ratio > 0, na.rm = TRUE) / n,
-            .groups = "drop"
-        )
-}
 
 
 # エラーバー付き散布図を作成する関数
@@ -154,23 +109,7 @@ if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
 ps <- load_q2obj(qza_folder) %>%
     tax_tweak(metadata_path)
 
-
-# OTUテーブルを取得
-otu <- ps %>%
-    otu_table() %>%
-    as.data.frame() %>%
-    rownames_to_column("FeatureID")
-
-# 分類学的情報を取得
-tax <- ps %>%
-    tax_table() %>%
-    as.data.frame() %>%
-    select("Genus") %>%
-    rownames_to_column("FeatureID")
-
-# 結合して表示
-df <- otu %>%
-    left_join(tax, by = "FeatureID")
+df <- ps_to_df(ps)
 
 # ------------------------------------------------------------------------------------------------
 

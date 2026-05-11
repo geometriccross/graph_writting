@@ -101,19 +101,3 @@ write_plot(
     tax_order = c(intracellular_taxa, "Other")
 )
 
-symbiotic_taxa <- c(
-    "Wolbachia",
-    "Spiroplasma",
-    "Rickettsiella",
-    "Arsenophonus",
-    "Cardinium",
-    "Hamiltonella",
-    "Regiella",
-    "Sodalis",
-    "Serratia",
-    "Buchnera",
-    "Blochmannia",
-    "Baumannia",
-    "Sulcia",
-    "Nasuia"
-)
