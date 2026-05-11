@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript
+
 library(conflicted)
 library(tidyverse)
 library(phyloseq)
@@ -122,12 +124,17 @@ plot_ratio_scatter <- function(ratio_df,
 
 
 args <- commandArgs(trailingOnly = TRUE)
-if (length(args) == 0) {
-    stop("Usage: Rscript scatter.r <folder>")
+if (length(args) < 2) {
+    stop("Usage: Rscript scatter.r <qza_folder> <metadata_path_or_folder> [output_dir]")
 }
-folder <- args[1]
+qza_folder <- args[1]
+metadata_path <- args[2]
+output_dir <- if (length(args) >= 3) args[3] else "."
 
-ps <- load_q2obj(folder)
+if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+
+ps <- load_q2obj(qza_folder) %>%
+    tax_tweak(metadata_path)
 
 
 # OTUテーブルを取得
@@ -209,9 +216,9 @@ names(target_map) %>%
     map_dfr(~ get_ratio(df, key = .x)) %>%
     mutate(Genus = factor(Genus, levels = names(target_map))) %>%
     plot_ratio_scatter(title = "占有率の比較", color_map = target_map) %>%
-    ggsave("relative_abundance_comparison.svg", plot = .)
+    ggsave(file.path(output_dir, "relative_abundance_comparison.svg"), plot = .)
 
 names(target_map) %>%
     map_dfr(~ get_ratio(df, key = .x) %>%
         calculate_stats()) %>%
-    write_csv("relative_abundance_stats.csv")
+    write_csv(file.path(output_dir, "relative_abundance_stats.csv"))

@@ -24,7 +24,7 @@ get_q2_type <- function(qza_path) {
                 str_match("^type:\\s*(.+?)\\s*$") |>
                 `[`(, 2) |>
                 `[`(!is.na(.))
-            if (length(type_val) == 0) stop("type field not found in " + basename(qza_path))
+            if (length(type_val) == 0) stop(sprintf("type field not found in %s", basename(qza_path)))
             type_val[1]
         },
         error = function(e) stop(sprintf("Failed to read q2 type from %s: %s", qza_path, e$message))
@@ -66,13 +66,23 @@ find_file <- function(folder, pattern) {
     files[1]
 }
 
-# QIIME2メタデータの読み込みとクリーニング（型定義行の削除とID列の修正）
-clean_sample_data <- function(folder) {
-    metadata_path <- find_file(folder, "metadata\\.tsv$")
-    read_tsv(metadata_path, comment = "") %>%
-        rename_with(~"SampleID", .cols = 1) %>%
-        filter(!str_detect(SampleID, "^#q2:types|^categorical|^numeric")) %>%
-        column_to_rownames("SampleID") %>%
+# メタデータの読み込みとクリーニング
+clean_sample_data <- function(file_or_folder) {
+    if (dir.exists(file_or_folder)) {
+        metadata_path <- find_file(file_or_folder, "metadata\\.tsv$")
+        reader <- read_tsv
+    } else if (grepl("\\.csv$", file_or_folder, ignore.case = TRUE)) {
+        metadata_path <- file_or_folder
+        reader <- read_csv
+    } else {
+        stop(sprintf("Unsupported metadata format: %s", file_or_folder))
+    }
+
+    id_col <- "SampleID"
+    reader(metadata_path, comment = "") %>%
+        rename_with(~id_col, .cols = 1) %>%
+        filter(!str_detect(.data[[id_col]], "^#q2:types|^categorical|^numeric")) %>%
+        column_to_rownames(id_col) %>%
         sample_data()
 }
 
@@ -95,9 +105,9 @@ load_q2obj <- function(folder) {
     )
 }
 
-tax_tweak <- function(phyloseq_object, folder) {
+tax_tweak <- function(phyloseq_object, file_or_folder) {
     phyloseq_object %>%
         tax_fix() %>%
         tax_fix(unknowns = c("uncultured")) %>%
-        merge_phyloseq(clean_sample_data(folder))
+        merge_phyloseq(clean_sample_data(file_or_folder))
 }
