@@ -30,7 +30,13 @@ write_plot <- function(ps, filename, tax_order = sum, width = 16, height = 9, dp
 }
 
 
-phyloseq_object <- load_q2obj() %>% tax_tweak()
+args <- commandArgs(trailingOnly = TRUE)
+if (length(args) == 0) {
+    stop("Usage: Rscript barplot.r <folder>")
+}
+folder <- args[1]
+
+phyloseq_object <- load_q2obj(folder) %>% tax_tweak(folder)
 
 natural_sorted <- phyloseq_object %>%
     sample_data() %>%

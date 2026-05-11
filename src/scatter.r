@@ -121,7 +121,13 @@ plot_ratio_scatter <- function(ratio_df,
 
 
 
-ps <- load_q2obj()
+args <- commandArgs(trailingOnly = TRUE)
+if (length(args) == 0) {
+    stop("Usage: Rscript scatter.r <folder>")
+}
+folder <- args[1]
+
+ps <- load_q2obj(folder)
 
 
 # OTUテーブルを取得
