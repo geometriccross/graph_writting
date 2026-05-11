@@ -20,10 +20,10 @@ get_q2_type <- function(qza_path) {
             yaml_path <- file.path(tmp, uuid_dir, "metadata.yaml")
             unzip(qza_path, files = file.path(uuid_dir, "metadata.yaml"), exdir = tmp)
 
-            type_val <- readLines(yaml_path) |>
-                str_match("^type:\\s*(.+?)\\s*$") |>
-                `[`(, 2) |>
-                `[`(!is.na(.))
+            type_val <- readLines(yaml_path) %>%
+                str_match("^type:\\s*(.+?)\\s*$") %>%
+                .[, 2] %>%
+                .[!is.na(.)]
             if (length(type_val) == 0) stop(sprintf("type field not found in %s", basename(qza_path)))
             type_val[1]
         },
