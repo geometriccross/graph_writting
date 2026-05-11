@@ -69,17 +69,15 @@ find_file <- function(folder, pattern) {
 # メタデータの読み込みとクリーニング
 clean_sample_data <- function(file_or_folder) {
     if (dir.exists(file_or_folder)) {
-        metadata_path <- find_file(file_or_folder, "metadata\\.tsv$")
-        reader <- read_tsv
+        metadata_path <- find_file(file_or_folder, "\\.csv$")
     } else if (grepl("\\.csv$", file_or_folder, ignore.case = TRUE)) {
         metadata_path <- file_or_folder
-        reader <- read_csv
     } else {
-        stop(sprintf("Unsupported metadata format: %s", file_or_folder))
+        stop(sprintf("Unsupported metadata format (expected .csv): %s", file_or_folder))
     }
 
     id_col <- "SampleID"
-    reader(metadata_path, comment = "") %>%
+    read_csv(metadata_path, comment = "") %>%
         rename_with(~id_col, .cols = 1) %>%
         filter(!str_detect(.data[[id_col]], "^#q2:types|^categorical|^numeric")) %>%
         column_to_rownames(id_col) %>%
