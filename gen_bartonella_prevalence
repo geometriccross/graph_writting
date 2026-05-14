@@ -61,15 +61,12 @@ plot_prevalence <- function(prevalence_df, title = "Bartonella保有率（種別
     ggplot(plot_df, aes(x = species_label, y = prevalence, fill = species_label)) +
         geom_col(width = 0.7) +
         geom_text(
-            aes(label = sprintf("n=%d", n)),
-            vjust = -0.5, size = 3.5
-        ) +
-        geom_text(
-            aes(label = sprintf("%.1f%%", prevalence * 100)),
-            vjust = -1.8, size = 3.5, fontface = "bold"
+            aes(label = sprintf("n=%d\n%d/%d\n%.1f%%", n, detected, n, prevalence * 100)),
+            vjust = -0.2, size = 3.2, lineheight = 0.9, fontface = "bold"
         ) +
         scale_y_continuous(
-            limits = c(0, 1.15),
+            limits = c(0, 1.25),
+            breaks = seq(0, 1, by = 0.25),
             labels = scales::percent_format()
         ) +
         labs(
