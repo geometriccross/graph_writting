@@ -9,8 +9,8 @@ show_help <- function() {
     cat("Options:\n")
     cat("  --help, -h      このヘルプメッセージを表示して終了する\n\n")
     cat("Outputs:\n")
-    cat("  bartonella_prevalence_by_species.csv  種ごとのBartonella保有率・陽性サンプルの丸め込み後占有率中央値\n")
-    cat("  bartonella_prevalence_by_species.svg  種ごとのBartonella保有率・陽性サンプルの丸め込み後占有率中央値 棒グラフ\n")
+    cat("  bartonella_prevalence_by_species.csv  種ごとのBartonella保有率・陽性サンプルの丸め込み後占有率中央値/最頻値\n")
+    cat("  bartonella_prevalence_by_species.svg  種ごとのBartonella保有率・陽性サンプルの丸め込み後占有率中央値/最頻値 棒グラフ\n")
     quit(status = 0)
 }
 
@@ -49,6 +49,18 @@ median_rounded_positive_ratio <- function(x) {
     round_ratio_to_0_1pct(median(rounded_positive))
 }
 
+# 陽性サンプルだけに限定し、占有率を丸め込んでから最頻値を計算
+mode_rounded_positive_ratio <- function(x) {
+    positive <- x[!is.na(x) & x > 0]
+    if (length(positive) == 0) {
+        return(NA_real_)
+    }
+
+    rounded_positive <- round_ratio_to_0_1pct(positive)
+    frequency <- table(rounded_positive)
+    as.numeric(names(frequency)[which.max(frequency)])
+}
+
 # speciesごとの保有率を計算
 calculate_prevalence <- function(ratio_df, sample_info) {
     ratio_df %>%
@@ -62,6 +74,7 @@ calculate_prevalence <- function(ratio_df, sample_info) {
             mean_ratio = mean(Ratio, na.rm = TRUE),
             sd_ratio = sd(Ratio, na.rm = TRUE),
             positive_rounded_median_ratio = median_rounded_positive_ratio(Ratio),
+            positive_rounded_mode_ratio = mode_rounded_positive_ratio(Ratio),
             .groups = "drop"
         ) %>%
         arrange(desc(prevalence))
@@ -79,6 +92,11 @@ plot_prevalence <- function(prevalence_df, title = "Bartonella保有率（種別
                 is.na(positive_rounded_median_ratio),
                 "NA",
                 sprintf("%.1f%%", positive_rounded_median_ratio * 100)
+            ),
+            mode_label = if_else(
+                is.na(positive_rounded_mode_ratio),
+                "NA",
+                sprintf("%.1f%%", positive_rounded_mode_ratio * 100)
             )
         )
 
@@ -86,13 +104,13 @@ plot_prevalence <- function(prevalence_df, title = "Bartonella保有率（種別
         geom_col(width = 0.7) +
         geom_text(
             aes(label = sprintf(
-                "n=%d\n%d/%d\n%.1f%%\n中央値=%s",
-                n, detected, n, prevalence * 100, median_label
+                "n=%d\n%d/%d\n%.1f%%\n中央値=%s\n最頻値=%s",
+                n, detected, n, prevalence * 100, median_label, mode_label
             )),
-            vjust = -0.2, size = 3.0, lineheight = 0.85, fontface = "bold"
+            vjust = -0.2, size = 2.8, lineheight = 0.82, fontface = "bold"
         ) +
         scale_y_continuous(
-            limits = c(0, 1.35),
+            limits = c(0, 1.45),
             breaks = seq(0, 1, by = 0.25),
             labels = scales::percent_format()
         ) +
