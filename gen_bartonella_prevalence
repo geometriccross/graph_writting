@@ -9,8 +9,8 @@ show_help <- function() {
     cat("Options:\n")
     cat("  --help, -h      このヘルプメッセージを表示して終了する\n\n")
     cat("Outputs:\n")
-    cat("  bartonella_prevalence_by_species.csv  種ごとのBartonella保有率\n")
-    cat("  bartonella_prevalence_by_species.svg  種ごとのBartonella保有率 棒グラフ\n")
+    cat("  bartonella_prevalence_by_species.csv  種ごとのBartonella保有率・陽性サンプルの丸め込み後占有率中央値\n")
+    cat("  bartonella_prevalence_by_species.svg  種ごとのBartonella保有率・陽性サンプルの丸め込み後占有率中央値 棒グラフ\n")
     quit(status = 0)
 }
 
@@ -31,6 +31,24 @@ conflict_prefer("filter", "dplyr")
 conflict_prefer("lag", "dplyr")
 
 
+# 0.1%刻みで占有率を丸める
+round_ratio_to_0_1pct <- function(x) {
+    step <- 0.001
+    rounded <- floor(x / step + 0.5) * step
+    pmin(pmax(rounded, 0), 1)
+}
+
+# 陽性サンプルだけに限定し、占有率を丸め込んでから中央値を計算
+median_rounded_positive_ratio <- function(x) {
+    positive <- x[!is.na(x) & x > 0]
+    if (length(positive) == 0) {
+        return(NA_real_)
+    }
+
+    rounded_positive <- round_ratio_to_0_1pct(positive)
+    round_ratio_to_0_1pct(median(rounded_positive))
+}
+
 # speciesごとの保有率を計算
 calculate_prevalence <- function(ratio_df, sample_info) {
     ratio_df %>%
@@ -43,6 +61,7 @@ calculate_prevalence <- function(ratio_df, sample_info) {
             prevalence = detected / n,
             mean_ratio = mean(Ratio, na.rm = TRUE),
             sd_ratio = sd(Ratio, na.rm = TRUE),
+            positive_rounded_median_ratio = median_rounded_positive_ratio(Ratio),
             .groups = "drop"
         ) %>%
         arrange(desc(prevalence))
@@ -55,17 +74,25 @@ plot_prevalence <- function(prevalence_df, title = "Bartonella保有率（種別
     plot_df <- prevalence_df %>%
         mutate(
             species_label = gsub("_", " ", species),
-            species_label = factor(species_label, levels = gsub("_", " ", species))
+            species_label = factor(species_label, levels = gsub("_", " ", species)),
+            median_label = if_else(
+                is.na(positive_rounded_median_ratio),
+                "NA",
+                sprintf("%.1f%%", positive_rounded_median_ratio * 100)
+            )
         )
 
     ggplot(plot_df, aes(x = species_label, y = prevalence, fill = species_label)) +
         geom_col(width = 0.7) +
         geom_text(
-            aes(label = sprintf("n=%d\n%d/%d\n%.1f%%", n, detected, n, prevalence * 100)),
-            vjust = -0.2, size = 3.2, lineheight = 0.9, fontface = "bold"
+            aes(label = sprintf(
+                "n=%d\n%d/%d\n%.1f%%\n中央値=%s",
+                n, detected, n, prevalence * 100, median_label
+            )),
+            vjust = -0.2, size = 3.0, lineheight = 0.85, fontface = "bold"
         ) +
         scale_y_continuous(
-            limits = c(0, 1.25),
+            limits = c(0, 1.35),
             breaks = seq(0, 1, by = 0.25),
             labels = scales::percent_format()
         ) +
