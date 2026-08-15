@@ -1,0 +1,95 @@
+#!/bin/sh
+set -eu
+
+PROJECT_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
+if ! command -v Rscript >/dev/null 2>&1; then
+    printf 'Rscriptが見つかりません。R 4.6をインストールしてから再実行してください。\n' >&2
+    exit 1
+fi
+
+Rscript --vanilla - "$PROJECT_ROOT" <<'RSCRIPT'
+args <- commandArgs(trailingOnly = TRUE)
+project <- normalizePath(args[[1]], mustWork = TRUE)
+
+actual_minor <- paste(
+    R.version$major,
+    strsplit(R.version$minor, ".", fixed = TRUE)[[1]][[1]],
+    sep = "."
+)
+if (actual_minor != "4.6") {
+    stop(
+        sprintf(
+            "R 4.6が必要です。現在のバージョン: %s (%s)",
+            R.version.string,
+            R.home()
+        ),
+        call. = FALSE
+    )
+}
+cat(sprintf("[1/3] %s を使用します。\n", R.version.string))
+
+user_library <- path.expand(Sys.getenv("R_LIBS_USER"))
+if (!nzchar(user_library)) {
+    user_library <- file.path(path.expand("~"), "R", paste0("library-", actual_minor))
+}
+dir.create(user_library, recursive = TRUE, showWarnings = FALSE)
+.libPaths(unique(c(user_library, .libPaths())))
+
+if (!requireNamespace("renv", quietly = TRUE)) {
+    cat("[2/3] renvをインストールします。\n")
+    install.packages(
+        "renv",
+        lib = user_library,
+        repos = "https://cloud.r-project.org"
+    )
+} else {
+    cat("[2/3] インストール済みのrenvを使用します。\n")
+}
+
+if (!requireNamespace("renv", quietly = TRUE)) {
+    stop("renvを読み込めませんでした。", call. = FALSE)
+}
+
+profile_path <- file.path(project, ".Rprofile")
+activation_path <- file.path(project, "renv", "activate.R")
+if (!file.exists(profile_path) || !file.exists(activation_path)) {
+    renv::activate(project = project)
+}
+
+project_library <- renv::paths$library(project = project)
+Sys.setenv(RENV_CONFIG_SYNCHRONIZED_CHECK = "FALSE")
+renv::load(project = project, quiet = TRUE)
+renv::restore(
+    project = project,
+    library = project_library,
+    prompt = FALSE
+)
+renv::load(project = project, quiet = TRUE)
+
+required_packages <- c(
+    "tidyverse",
+    "phyloseq",
+    "microViz",
+    "qiime2R",
+    "gtools",
+    "conflicted",
+    "dplyr",
+    "svglite"
+)
+missing_packages <- required_packages[
+    !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+]
+if (length(missing_packages)) {
+    stop(
+        sprintf(
+            "復元後も不足しているパッケージがあります: %s",
+            paste(missing_packages, collapse = ", ")
+        ),
+        call. = FALSE
+    )
+}
+
+cat("[3/3] 必要なRパッケージを確認しました。\n")
+cat("セットアップが完了しました。./graph-writing --help で確認できます。\n")
+RSCRIPT

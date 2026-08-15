@@ -26,8 +26,9 @@ library(microViz)
 library(gtools)
 library(dplyr)
 
-source("./src/q2obj.r")
-source("./src/df_modify.r")
+project_root <- Sys.getenv("GRAPH_WRITING_ROOT", unset = ".")
+source(file.path(project_root, "src/q2obj.r"))
+source(file.path(project_root, "src/df_modify.r"))
 
 
 conflict_prefer("filter", "dplyr")

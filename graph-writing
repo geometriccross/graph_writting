@@ -1,0 +1,63 @@
+#!/bin/sh
+set -eu
+
+PROJECT_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+export GRAPH_WRITING_ROOT="$PROJECT_ROOT"
+export RENV_PROJECT="$PROJECT_ROOT"
+
+RENV_PROFILE="$PROJECT_ROOT/renv/activate.R"
+if [ -f "$RENV_PROFILE" ]; then
+    export R_PROFILE_USER="$RENV_PROFILE"
+fi
+
+show_help() {
+    cat <<'EOF'
+Usage:
+  graph-writing <command> [arguments]
+
+Commands:
+  barplot <qza_folder> <metadata_path_or_folder> [output_dir]
+      属レベルの構成比グラフを生成する
+
+  scatter <qza_folder> <metadata_path_or_folder> [output_dir]
+      相対存在比の散布図と統計CSVを生成する
+
+  bartonella <qza_folder> <metadata_path> [output_dir]
+      種別のBartonella保有率を集計する
+
+Options:
+  --help, -h
+      このヘルプを表示する
+
+各サブコマンドの詳細:
+  graph-writing <command> --help
+EOF
+}
+
+if [ "$#" -eq 0 ]; then
+    show_help >&2
+    exit 2
+fi
+
+subcommand=$1
+shift
+
+case "$subcommand" in
+    --help|-h)
+        show_help
+        ;;
+    barplot)
+        exec "$PROJECT_ROOT/gen_barplot" "$@"
+        ;;
+    scatter)
+        exec "$PROJECT_ROOT/gen_scatter" "$@"
+        ;;
+    bartonella)
+        exec "$PROJECT_ROOT/gen_bartonella_prevalence" "$@"
+        ;;
+    *)
+        printf 'Unknown command: %s\n\n' "$subcommand" >&2
+        show_help >&2
+        exit 2
+        ;;
+esac

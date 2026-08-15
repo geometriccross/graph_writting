@@ -25,7 +25,8 @@ library(microViz)
 library(qiime2R)
 library(gtools)
 
-source("./src/q2obj.r")
+project_root <- Sys.getenv("GRAPH_WRITING_ROOT", unset = ".")
+source(file.path(project_root, "src/q2obj.r"))
 
 
 write_plot <- function(ps, filename, tax_order = sum, width = 16, height = 9, dpi = 600) {
