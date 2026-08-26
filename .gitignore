@@ -4,4 +4,6 @@
 /renv
 temp.sh
 *.svg
+/out/
 .context/
+.DS_Store
